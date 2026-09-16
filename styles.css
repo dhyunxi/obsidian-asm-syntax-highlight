@@ -1,0 +1,18 @@
+.cm-s-obsidian span.cm-comment,
+.asm-highlight span.cm-comment { color: #6A9955; } 
+.cm-s-obsidian span.cm-keyword,
+.asm-highlight span.cm-keyword { color: #569CD6; } 
+.cm-s-obsidian span.cm-register,
+.asm-highlight span.cm-register { color: #f6b055; }
+.cm-s-obsidian span.cm-decimal,
+.asm-highlight span.cm-decimal { color: #1cb5b8; }
+.cm-s-obsidian span.cm-memory,
+.asm-highlight span.cm-memory { color: #abb81c; }
+.cm-s-obsidian span.cm-hexadecimal,
+.asm-highlight span.cm-hexadecimal { color: #1cb5b8; }
+.cm-s-obsidian span.cm-label,
+.asm-highlight span.cm-label { color: #8be6ca; }
+.cm-s-obsidian span.cm-directive,
+.asm-highlight span.cm-directive { color: #1cb5b8; }
+.cm-s-obsidian span.cm-constant,
+.asm-highlight span.cm-constant { color: #7384e0; }
