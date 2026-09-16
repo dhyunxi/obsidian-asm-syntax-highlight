@@ -10,6 +10,7 @@ type TokenType =
 	| "label"
 	| "directive"
 	| "constant"
+	| "string"
 	| "separator";
 
 interface TokenRule {
@@ -19,14 +20,25 @@ interface TokenRule {
 
 const ASM_RULES: TokenRule[] = [
 	{ regex: /^;.*/, token: "comment" },
+	{ regex: /^(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/, token: "string" },
 	{ regex: /^\b(?:mov|add|sub|imul|idiv|mul|div|and|or|xor|not|neg|inc|dec|cmp|test|jmp|je|jne|jz|jnz|jg|jl|jge|jle|call|ret|push|pop|leave|lea|nop|int|syscall|cld|std|rep|repe|repne)\b/i, token: "keyword" },
 	{ regex: /^\b(?:rax|rbx|rcx|rdx|rsi|rdi|rsp|rbp|eax|ebx|ecx|edx|esi|edi|esp|ebp|ax|bx|cx|dx|si|di|sp|bp|al|bl|cl|dl|ah|bh|ch|dh|r8|r9|r1[0-5]|r8d|r9d|r1[0-5]d|r8w|r9w|r1[0-5]w|r8b|r9b|r1[0-5]b)\b/i, token: "register" },
-	{ regex: /^\b(?:byte|word|dword|qword|tword|ptr)?\s*\[.*?\]/i, token: "memory" },
+	{ regex: /^\b(?:(?:byte|word|dword|qword|tword|oword|xmmword|ymmword|zmmword)\s+(?:ptr\s+)?)?\[.*?\]/i, token: "memory" },
 	{ regex: /^\b[A-Z_][A-Z0-9_]*\b/, token: "constant" },
-	{ regex: /^\.(?:text|data|bss|rodata|section|globl|extern|align|org|type|size|endp|proc|code|stack|model|assume|db|dw|dd|dq|dt|equ|define|segment|ends|include)\b/i, token: "directive" },
+	{ regex: /^\.(?:text|data|bss|rodata|section|globl|global|extern|align|balign|p2align|org|type|size|endp|proc|code|stack|model|assume|byte|word|long|quad|octa|ascii|asciz|string|zero|space|skip|fill|db|dw|dd|dq|dt|equ|set|define|segment|ends|include)\b/i, token: "directive" },
 	{ regex: /^,/, token: "separator" },
 	{ regex: /^\b(?:0x[0-9A-Fa-f]+|(?:0[0-9A-Fa-f]*|[1-9][0-9A-Fa-f]*)h)\b/i, token: "hexadecimal" },
 	{ regex: /^-?\d[\d_]*(?:\.\d[\d_]*)?(?:[Ee]-?\d[\d_]*)?/, token: "decimal" },
+];
+
+const LEGACY_ASM_RULES: TokenRule[] = [
+	{ regex: /;.*/, token: "comment" },
+	{ regex: /(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'):/, token: "label" },
+	{ regex: /(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/, token: "string" },
+	...ASM_RULES.filter((rule) => rule.token !== "comment" && rule.token !== "string").map((rule) => ({
+		regex: new RegExp(rule.regex.source.slice(1), rule.regex.flags),
+		token: rule.token,
+	})),
 ];
 
 export default class AsmSyntaxHighlightPlugin extends Plugin {
@@ -74,7 +86,7 @@ export default class AsmSyntaxHighlightPlugin extends Plugin {
 
 	private appendHighlightedLine(parent: HTMLElement, line: string) {
 		let remaining = line;
-		const labelMatch = remaining.match(/^(\s*[a-zA-Z_][a-zA-Z0-9_]*:)/);
+		const labelMatch = remaining.match(/^(\s*(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[a-zA-Z_.$@?][a-zA-Z0-9_.$@?]*):)/);
 
 		if (labelMatch?.[0]) {
 			this.appendToken(parent, labelMatch[0], "label");
@@ -93,6 +105,13 @@ export default class AsmSyntaxHighlightPlugin extends Plugin {
 			if (match) {
 				this.appendToken(parent, match.text, match.token);
 				remaining = remaining.slice(match.text.length);
+				continue;
+			}
+
+			const plainText = remaining.match(/^[a-zA-Z_.$@?][a-zA-Z0-9_.$@?]*/);
+			if (plainText?.[0]) {
+				parent.appendChild(document.createTextNode(plainText[0]));
+				remaining = remaining.slice(plainText[0].length);
 				continue;
 			}
 
@@ -128,10 +147,7 @@ export default class AsmSyntaxHighlightPlugin extends Plugin {
 
 			if (!codeMirror.modes?.asm) {
 				codeMirror.defineSimpleMode("asm", {
-					start: ASM_RULES.map((rule) => ({
-						regex: new RegExp(rule.regex.source.slice(1), rule.regex.flags),
-						token: rule.token,
-					})),
+					start: LEGACY_ASM_RULES,
 				});
 			}
 

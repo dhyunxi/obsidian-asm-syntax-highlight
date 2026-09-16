@@ -11,8 +11,10 @@
 .cm-s-obsidian span.cm-hexadecimal,
 .asm-highlight span.cm-hexadecimal { color: #1cb5b8; }
 .cm-s-obsidian span.cm-label,
-.asm-highlight span.cm-label { color: #8be6ca; }
+.asm-highlight span.cm-label { color: #16856f; }
 .cm-s-obsidian span.cm-directive,
 .asm-highlight span.cm-directive { color: #1cb5b8; }
 .cm-s-obsidian span.cm-constant,
 .asm-highlight span.cm-constant { color: #7384e0; }
+.cm-s-obsidian span.cm-string,
+.asm-highlight span.cm-string { color: #ce9178; }
